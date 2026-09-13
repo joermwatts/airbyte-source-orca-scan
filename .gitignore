@@ -1,0 +1,29 @@
+# secrets and machine-local
+.env
+*.env
+*.local.md
+.claude/settings.local.json
+.work/
+secrets/
+
+# dependencies and builds
+node_modules/
+dist/
+build/
+.venv/
+__pycache__/
+*.pyc
+
+# OS noise
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# test output
+.coverage
+htmlcov/
+.pytest_cache/
+
+# connector acceptance test artefacts
+.hypothesis/
+acceptance_tests_logs/

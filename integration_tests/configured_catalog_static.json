@@ -1,0 +1,554 @@
+{
+  "streams": [
+    {
+      "stream": {
+        "name": "sheets",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "_id": {
+              "type": "string",
+              "description": "Sheet id (24-character hex)."
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Sheet title as shown in Orca Scan."
+            },
+            "isOwner": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "description": "True if the API key's user owns the sheet."
+            },
+            "canAdmin": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "canUpdate": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "canDelete": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "canExport": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "supported_sync_modes": [
+          "full_refresh"
+        ],
+        "source_defined_primary_key": [
+          [
+            "_id"
+          ]
+        ],
+        "is_resumable": true
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "sheet_fields",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "sheet_id": {
+              "type": "string",
+              "description": "Id of the sheet this column belongs to (added by the connector)."
+            },
+            "key": {
+              "type": "string",
+              "description": "Internal column key, used as the property name in row records."
+            },
+            "label": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Column display name."
+            },
+            "type": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Underlying value type: string, integer, boolean, datetime, image, gps, ..."
+            },
+            "format": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Orca Scan field format, e.g. text, barcode, number, date time (automatic), photo, gps location."
+            },
+            "index": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "description": "Column position."
+            },
+            "required": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "locked": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "default": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            },
+            "placeholder": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "prefix": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "suffix": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "length": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "minLength": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "maxLength": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "minimum": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "maximum": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "formula": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "currencyType": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "listOptions": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": [
+                  "string",
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "multiSelect": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "autofocus": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "autoselect": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "emptyOnEdit": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "emptyOnScan": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "hiddenWeb": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "hiddenMobile": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "readonlyWeb": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "readonlyMobile": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "useInMobileSearch": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "useValueInList": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "supported_sync_modes": [
+          "full_refresh"
+        ],
+        "source_defined_primary_key": [
+          [
+            "sheet_id"
+          ],
+          [
+            "key"
+          ]
+        ],
+        "is_resumable": false
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "sheet_users",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "sheet_id": {
+              "type": "string",
+              "description": "Id of the sheet this user has access to (added by the connector)."
+            },
+            "_id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "User id."
+            },
+            "email": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "inviteId": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Present while the invitation is pending."
+            },
+            "canAdmin": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "canUpdate": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "canDelete": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "canExport": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "supported_sync_modes": [
+          "full_refresh"
+        ],
+        "source_defined_primary_key": [
+          [
+            "sheet_id"
+          ],
+          [
+            "_id"
+          ]
+        ],
+        "is_resumable": false
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "sheet_hooks",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "sheet_id": {
+              "type": "string",
+              "description": "Id of the sheet the webhook is registered on (added by the connector)."
+            },
+            "_id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Webhook id."
+            },
+            "targetUrl": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "URL Orca Scan calls when the event fires."
+            },
+            "eventName": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "One of the sheet's hook-events, e.g. rows:add, rows:update, rows:delete, sheet:clear, or * for all."
+            },
+            "sheetId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "enabled": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "supported_sync_modes": [
+          "full_refresh"
+        ],
+        "source_defined_primary_key": [
+          [
+            "sheet_id"
+          ],
+          [
+            "_id"
+          ]
+        ],
+        "is_resumable": false
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "sheet_triggers",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "sheet_id": {
+              "type": "string",
+              "description": "Id of the sheet the trigger belongs to (added by the connector)."
+            },
+            "_id": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Trigger id."
+            },
+            "sheetId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "enabled": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "conditionField": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Column key the condition is evaluated on."
+            },
+            "conditionType": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "e.g. equals, contains, is empty, is greater than, matches regex, exists in."
+            },
+            "conditionValue": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "actionType": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "e.g. show, hide, set value, notify me, play sound, move row, copy row."
+            },
+            "actionField": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "actionValue": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "notifyMethod": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "email, in app notification or in app dialog."
+            },
+            "notifyType": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "success, warning or error."
+            },
+            "notifyEmails": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "soundType": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "toSheet": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Destination sheet id for move row / copy row actions."
+            }
+          }
+        },
+        "supported_sync_modes": [
+          "full_refresh"
+        ],
+        "source_defined_primary_key": [
+          [
+            "sheet_id"
+          ],
+          [
+            "_id"
+          ]
+        ],
+        "is_resumable": false
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    }
+  ]
+}

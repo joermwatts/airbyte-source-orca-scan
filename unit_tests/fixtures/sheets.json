@@ -1,0 +1,22 @@
+{
+  "data": [
+    {
+      "_id": "c0c06edeacf3ec06b99adc6c",
+      "name": "Sample Sheet A",
+      "isOwner": true,
+      "canAdmin": true,
+      "canUpdate": true,
+      "canDelete": true,
+      "canExport": true
+    },
+    {
+      "_id": "272009b8259668ce9d17904d",
+      "name": "Sample Sheet B",
+      "isOwner": true,
+      "canAdmin": true,
+      "canUpdate": true,
+      "canDelete": true,
+      "canExport": true
+    }
+  ]
+}

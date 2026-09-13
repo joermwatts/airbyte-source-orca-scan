@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "sheet_id": { "type": "string", "description": "Id of the sheet this user has access to (added by the connector)." },
+    "_id": { "type": ["string", "null"], "description": "User id." },
+    "email": { "type": ["string", "null"] },
+    "inviteId": { "type": ["string", "null"], "description": "Present while the invitation is pending." },
+    "canAdmin": { "type": ["boolean", "null"] },
+    "canUpdate": { "type": ["boolean", "null"] },
+    "canDelete": { "type": ["boolean", "null"] },
+    "canExport": { "type": ["boolean", "null"] }
+  }
+}

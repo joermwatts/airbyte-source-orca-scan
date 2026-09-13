@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Orca Scan source connector">
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#0F172A"/>
+  <g fill="#F8FAFC">
+    <rect x="14" y="18" width="4" height="28"/>
+    <rect x="21" y="18" width="2" height="28"/>
+    <rect x="26" y="18" width="5" height="28"/>
+    <rect x="34" y="18" width="2" height="28"/>
+    <rect x="39" y="18" width="3" height="28"/>
+    <rect x="45" y="18" width="5" height="28"/>
+  </g>
+  <rect x="9" y="30" width="46" height="3" rx="1.5" fill="#38BDF8"/>
+</svg>

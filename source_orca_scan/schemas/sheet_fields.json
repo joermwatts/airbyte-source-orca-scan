@@ -1,0 +1,213 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "sheet_id": {
+      "type": "string",
+      "description": "Id of the sheet this column belongs to (added by the connector)."
+    },
+    "key": {
+      "type": "string",
+      "description": "Internal column key, used as the property name in row records."
+    },
+    "label": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Column display name."
+    },
+    "type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Underlying value type: string, integer, boolean, datetime, image, gps, ..."
+    },
+    "format": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Orca Scan field format, e.g. text, barcode, number, date time (automatic), photo, gps location."
+    },
+    "index": {
+      "type": [
+        "integer",
+        "string",
+        "null"
+      ],
+      "description": "Column position."
+    },
+    "required": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "locked": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "default": {
+      "type": [
+        "string",
+        "number",
+        "boolean",
+        "null"
+      ]
+    },
+    "placeholder": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "prefix": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "suffix": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "length": {
+      "type": [
+        "integer",
+        "string",
+        "null"
+      ],
+      "description": "Orca returns this as a number or a numeric string."
+    },
+    "minLength": {
+      "type": [
+        "integer",
+        "string",
+        "null"
+      ],
+      "description": "Orca returns this as a number or a numeric string."
+    },
+    "maxLength": {
+      "type": [
+        "integer",
+        "string",
+        "null"
+      ],
+      "description": "Orca returns this as a number or a numeric string."
+    },
+    "minimum": {
+      "type": [
+        "number",
+        "string",
+        "null"
+      ],
+      "description": "Orca returns this as a number or a numeric string."
+    },
+    "maximum": {
+      "type": [
+        "number",
+        "string",
+        "null"
+      ],
+      "description": "Orca returns this as a number or a numeric string."
+    },
+    "formula": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "currencyType": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "listOptions": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": [
+          "string",
+          "number",
+          "null"
+        ]
+      }
+    },
+    "multiSelect": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "autofocus": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "autoselect": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "emptyOnEdit": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "emptyOnScan": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "hiddenWeb": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "hiddenMobile": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "readonlyWeb": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "readonlyMobile": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "useInMobileSearch": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "useValueInList": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    }
+  }
+}

@@ -1,0 +1,35 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "airbyte-source-orca-scan"
+version = "0.1.0"
+description = "Airbyte source connector for Orca Scan - barcode and inventory sheets, rows, fields, history, users, webhooks and triggers."
+authors = ["Joe R M Watts Limited (WattsWeb) <joe@joermwatts.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/joermwatts/airbyte-source-orca-scan"
+repository = "https://github.com/joermwatts/airbyte-source-orca-scan"
+keywords = ["airbyte", "connector", "source", "orca-scan", "barcode", "inventory"]
+packages = [{ include = "source_orca_scan" }]
+include = ["source_orca_scan/spec.yaml", "source_orca_scan/schemas/*.json"]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.14"
+airbyte-cdk = "^7.28"
+ijson = "^3.3"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3"
+pytest-mock = "^3.14"
+pytest-cov = "^6.0"
+requests-mock = "^1.12"
+
+[tool.poetry.scripts]
+source-orca-scan = "source_orca_scan.run:run"
+
+[tool.pytest.ini_options]
+testpaths = ["unit_tests", "integration_tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]

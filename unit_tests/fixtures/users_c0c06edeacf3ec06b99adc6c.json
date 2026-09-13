@@ -1,0 +1,13 @@
+{
+  "data": [
+    {
+      "email": "user@example.com",
+      "canUpdate": true,
+      "canDelete": false,
+      "canExport": false,
+      "canAdmin": false,
+      "inviteId": "",
+      "_id": "ab1bebfa65ddd72fe57257e6"
+    }
+  ]
+}

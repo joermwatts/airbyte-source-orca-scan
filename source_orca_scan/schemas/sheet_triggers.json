@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "sheet_id": { "type": "string", "description": "Id of the sheet the trigger belongs to (added by the connector)." },
+    "_id": { "type": ["string", "null"], "description": "Trigger id." },
+    "sheetId": { "type": ["string", "null"] },
+    "name": { "type": ["string", "null"] },
+    "enabled": { "type": ["boolean", "null"] },
+    "conditionField": { "type": ["string", "null"], "description": "Column key the condition is evaluated on." },
+    "conditionType": { "type": ["string", "null"], "description": "e.g. equals, contains, is empty, is greater than, matches regex, exists in." },
+    "conditionValue": { "type": ["string", "null"] },
+    "actionType": { "type": ["string", "null"], "description": "e.g. show, hide, set value, notify me, play sound, move row, copy row." },
+    "actionField": { "type": ["string", "null"] },
+    "actionValue": { "type": ["string", "null"] },
+    "notifyMethod": { "type": ["string", "null"], "description": "email, in app notification or in app dialog." },
+    "notifyType": { "type": ["string", "null"], "description": "success, warning or error." },
+    "notifyEmails": { "type": ["string", "null"] },
+    "soundType": { "type": ["string", "null"] },
+    "toSheet": { "type": ["string", "null"], "description": "Destination sheet id for move row / copy row actions." }
+  }
+}

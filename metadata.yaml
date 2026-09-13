@@ -1,0 +1,44 @@
+# Airbyte connector metadata. Reference:
+# https://docs.airbyte.com/platform/connector-development/connector-metadata-file
+data:
+  name: Orca Scan
+  definitionId: 8e52e231-5b16-4965-b33e-921859dcd443
+  connectorType: source
+  connectorSubtype: api
+  dockerRepository: airbyte/source-orca-scan
+  dockerImageTag: 0.1.0
+  documentationUrl: https://github.com/joermwatts/airbyte-source-orca-scan/blob/main/docs/orca-scan.md
+  githubIssueLabel: source-orca-scan
+  icon: icon.svg
+  license: MIT
+  releaseStage: alpha
+  supportLevel: community
+  tags:
+    - language:python
+    - keyword:barcode
+    - keyword:inventory
+    - keyword:orca-scan
+  allowedHosts:
+    hosts:
+      - api.orcascan.com
+  connectorBuildOptions:
+    # Airbyte's current Python base image; the standalone Dockerfile uses python:3.11-slim.
+    baseImage: docker.io/airbyte/python-connector-base:4.1.1
+  registryOverrides:
+    oss:
+      enabled: true
+    cloud:
+      enabled: false
+  ab_internal:
+    ql: 100
+    sl: 100
+  connectorTestSuitesOptions:
+    - suite: unitTests
+    - suite: acceptanceTests
+      testSecrets:
+        - name: SECRET_SOURCE-ORCA-SCAN__CREDS
+          fileName: config.json
+          secretStore:
+            type: GSM
+            alias: airbyte-connector-testing-secret-store
+metadataSpecVersion: "1.0"

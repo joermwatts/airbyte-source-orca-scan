@@ -1,0 +1,17 @@
+{
+  "data": [
+    {
+      "name": "sample text",
+      "conditionField": "sample text",
+      "conditionType": "is greater than",
+      "conditionValue": "1",
+      "actionType": "notify me",
+      "notifyMethod": "in app dialog",
+      "notifyType": "warning",
+      "actionValue": "sample text",
+      "enabled": false,
+      "sheetId": "c0c06edeacf3ec06b99adc6c",
+      "_id": "0fd76b5f95fe0bfddf631f68"
+    }
+  ]
+}

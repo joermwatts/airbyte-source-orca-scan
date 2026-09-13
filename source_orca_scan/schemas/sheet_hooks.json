@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "sheet_id": { "type": "string", "description": "Id of the sheet the webhook is registered on (added by the connector)." },
+    "_id": { "type": ["string", "null"], "description": "Webhook id." },
+    "targetUrl": { "type": ["string", "null"], "description": "URL Orca Scan calls when the event fires." },
+    "eventName": { "type": ["string", "null"], "description": "One of the sheet's hook-events, e.g. rows:add, rows:update, rows:delete, sheet:clear, or * for all." },
+    "sheetId": { "type": ["string", "null"] },
+    "enabled": { "type": ["boolean", "null"] }
+  }
+}
