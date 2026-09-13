@@ -20,12 +20,12 @@ MIT licensed. Not affiliated with Orca Scan or Airbyte.
 | Field | Required | Description |
 |-------|----------|-------------|
 | `api_key` | yes | Your Orca Scan API key. Sent as `Authorization: Bearer <key>`. |
-| `start_date` | no | `YYYY-MM-DDTHH:MM:SS` (UTC). On the first incremental sync of `sheet_history`, only changes at or after this instant are emitted. Leave blank for everything. |
+| `start_date` | no | `YYYY-MM-DDTHH:MM:SSZ` (UTC; the trailing `Z` is optional). On the first incremental sync of `sheet_history`, only changes at or after this instant are emitted. Leave blank for everything. |
 
 `secrets/config.json`:
 
 ```json
-{ "api_key": "orca_...", "start_date": "2025-01-01T00:00:00" }
+{ "api_key": "orca_...", "start_date": "2025-01-01T00:00:00Z" }
 ```
 
 ## Streams
@@ -130,7 +130,7 @@ Differences from the Python connector, all inherent to the low-code runtime:
   memory during the sync;
 - per-sheet streams are named `rows_<slug>` without the collision suffix, so two sheets whose
   names differ only in punctuation would clash - rename one in Orca Scan;
-- `start_date` must be the full `YYYY-MM-DDTHH:MM:SS` form;
+- `start_date` must be the full `YYYY-MM-DDTHH:MM:SS` form (a trailing `Z`, as the Builder's datepicker writes it, is fine);
 - dynamic streams and API budgets need a recent Airbyte platform (the manifest targets CDK 7.x).
 
 To run it locally with the CDK's generic runner:

@@ -11,7 +11,8 @@
 #     memory during the sync;
 #   - per-sheet stream names are rows_<slug> without the collision suffix, so two sheets whose
 #     names differ only in punctuation would clash - rename one in Orca Scan;
-#   - start_date must be the full YYYY-MM-DDTHH:MM:SS form.
+#   - start_date must be the full YYYY-MM-DDTHH:MM:SS form (a trailing Z, as the Builder's
+#     datepicker writes it, is accepted).
 # Dynamic streams and API budgets need a recent Airbyte platform / CDK.
 
 version: 7.28.3
@@ -309,7 +310,8 @@ definitions:
           - "%Y-%m-%dT%H:%M:%S"
         start_datetime:
           type: MinMaxDatetime
-          datetime: "{{ config.get('start_date') or '2000-01-01T00:00:00' }}"
+          # The Builder's datepicker writes a trailing Z; typed values may omit it. Accept both.
+          datetime: "{{ (config.get('start_date') or '2000-01-01T00:00:00') | regex_replace('Z$', '') }}"
           datetime_format: "%Y-%m-%dT%H:%M:%S"
         is_client_side_incremental: true
       transformations:
@@ -444,11 +446,11 @@ spec:
         description: >-
           Optional. On the first incremental sync of sheet_history, only changes at or after this
           instant (UTC) are replicated. Leave blank to sync the full history. Rows are always
-          synced in full - they carry no timestamp. Format: 2024-01-01T00:00:00.
-        pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}$"
-        pattern_descriptor: "YYYY-MM-DDTHH:mm:ss"
+          synced in full - they carry no timestamp. Format: 2024-01-01T00:00:00Z.
+        pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z?$"
+        pattern_descriptor: "YYYY-MM-DDTHH:mm:ssZ"
         examples:
-          - "2024-01-01T00:00:00"
+          - "2024-01-01T00:00:00Z"
         format: date-time
         order: 1
 

@@ -17,7 +17,7 @@ destination.
 1. In Airbyte, go to **Sources** and add a new **Orca Scan** source.
 2. Enter a name for the source.
 3. Paste your **API Key**.
-4. Optionally set a **Start Date** (`YYYY-MM-DDTHH:MM:SS`, UTC). On the first incremental sync of `sheet_history` only changes at or after this instant are replicated.
+4. Optionally set a **Start Date** (`YYYY-MM-DDTHH:MM:SSZ`, UTC). On the first incremental sync of `sheet_history` only changes at or after this instant are replicated.
 5. Click **Set up source**. Airbyte checks the key by listing your sheets.
 
 ## Supported sync modes

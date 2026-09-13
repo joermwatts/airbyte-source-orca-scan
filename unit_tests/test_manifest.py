@@ -63,6 +63,35 @@ def test_manifest_validates_and_exposes_the_spec(config, requests_mock):
     assert schema["properties"]["api_key"]["airbyte_secret"] is True
 
 
+def test_manifest_start_date_accepts_the_datepicker_form_and_filters_history(requests_mock):
+    """The Builder's datepicker writes 2024-01-01T00:00:00Z; the pattern must allow it and the
+    cursor must parse it (the Z is stripped before parsing)."""
+    import re
+
+    _mock_api(requests_mock)
+    config = {"api_key": "orca_test_key_not_real", "start_date": "2999-01-01T00:00:00Z"}
+    source = _source(config)
+    pattern = source.spec(logging.getLogger("airbyte")).connectionSpecification["properties"]["start_date"]["pattern"]
+    assert re.match(pattern, "2024-01-01T00:00:00Z")
+    assert re.match(pattern, "2024-01-01T00:00:00")
+
+    history = _discover(source, config)["sheet_history"]
+    catalog = ConfiguredAirbyteCatalog(
+        streams=[
+            ConfiguredAirbyteStream(
+                stream=history, sync_mode=SyncMode.incremental, cursor_field=["_changedOn"], destination_sync_mode=DestinationSyncMode.append
+            )
+        ]
+    )
+    manifest = yaml.safe_load(MANIFEST.read_text(encoding="utf-8"))
+    source = ConcurrentDeclarativeSource(source_config=manifest, config=config, catalog=catalog)
+    messages = list(source.read(logging.getLogger("airbyte"), config, catalog))
+
+    # A start date in 2999 filters every fixture entry out, and nothing errors.
+    assert not [m for m in messages if m.type == Type.RECORD]
+    assert not [m for m in messages if m.type == Type.TRACE and m.trace.type.value == "ERROR"]
+
+
 def test_manifest_resolves_fixed_and_per_sheet_streams(config, requests_mock):
     _mock_api(requests_mock)
     streams = _discover(_source(config), config)
