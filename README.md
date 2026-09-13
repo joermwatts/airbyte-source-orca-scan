@@ -115,6 +115,32 @@ In Airbyte OSS / Self-Managed: *Settings -> Sources -> + New connector*, set the
 add an *Orca Scan* source and paste your API key. Airbyte Cloud only runs connectors from the
 Airbyte registry; this connector is not (yet) listed there.
 
+## Connector Builder (low-code) version
+
+[`connector-builder/manifest.yaml`](connector-builder/manifest.yaml) is a declarative version of
+the same connector for Airbyte's **Connector Builder**: in Airbyte go to *Builder -> New custom
+connector -> Import a YAML manifest*, paste the file, enter your API key in *Testing values* and
+publish. It gives you the same streams, auth, rate limiting, per-sheet typed row streams (via
+dynamic streams and a dynamic schema loader) and client-side incremental `sheet_history`,
+without building a Docker image.
+
+Differences from the Python connector, all inherent to the low-code runtime:
+
+- responses are parsed in one go rather than streamed, so a very large history is held in
+  memory during the sync;
+- per-sheet streams are named `rows_<slug>` without the collision suffix, so two sheets whose
+  names differ only in punctuation would clash - rename one in Orca Scan;
+- `start_date` must be the full `YYYY-MM-DDTHH:MM:SS` form;
+- dynamic streams and API budgets need a recent Airbyte platform (the manifest targets CDK 7.x).
+
+To run it locally with the CDK's generic runner:
+
+```bash
+poetry run python scripts/manifest_config.py      # merges secrets/config.json with the manifest
+poetry run source-declarative-manifest check --config secrets/config_manifest.json
+poetry run source-declarative-manifest discover --config secrets/config_manifest.json
+```
+
 ## Development
 
 ```bash

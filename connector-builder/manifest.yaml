@@ -1,0 +1,462 @@
+# Orca Scan - Airbyte low-code (declarative) manifest.
+#
+# Import this into Airbyte's Connector Builder (Builder -> New custom connector -> Import a YAML
+# manifest) or run it locally with the Python CDK:
+#   poetry run python scripts/manifest_config.py           # writes secrets/config_manifest.json
+#   poetry run source-declarative-manifest check --config secrets/config_manifest.json
+#
+# It mirrors the Python connector in this repository (same streams, auth, rate limit, cursor and
+# per-sheet schemas). Differences, all inherent to the low-code runtime:
+#   - responses are parsed in one go rather than streamed, so a very large history is held in
+#     memory during the sync;
+#   - per-sheet stream names are rows_<slug> without the collision suffix, so two sheets whose
+#     names differ only in punctuation would clash - rename one in Orca Scan;
+#   - start_date must be the full YYYY-MM-DDTHH:MM:SS form.
+# Dynamic streams and API budgets need a recent Airbyte platform / CDK.
+
+version: 7.28.3
+type: DeclarativeSource
+description: >-
+  Read-only source for Orca Scan (https://orcascan.com): every sheet the API key can see, with
+  its rows, column definitions, change history, users, webhooks and automation rules.
+
+check:
+  type: CheckStream
+  stream_names:
+    - sheets
+
+# Orca Scan allows 15 requests/second per key; stay a little under it across all streams.
+api_budget:
+  type: HTTPAPIBudget
+  policies:
+    - type: MovingWindowCallRatePolicy
+      rates:
+        - limit: 12
+          interval: PT1S
+      matchers: []
+
+definitions:
+  base_requester:
+    type: HttpRequester
+    url_base: https://api.orcascan.com/v1
+    http_method: GET
+    request_headers:
+      Accept: application/json
+    authenticator:
+      type: BearerAuthenticator
+      api_token: "{{ config['api_key'] }}"
+    error_handler:
+      type: DefaultErrorHandler
+      max_retries: 5
+      backoff_strategies:
+        - type: WaitTimeFromHeader
+          header: Retry-After
+        - type: ExponentialBackoffStrategy
+          factor: 2
+      response_filters:
+        - type: HttpResponseFilter
+          http_codes: [401]
+          action: FAIL
+          failure_type: config_error
+          error_message: >-
+            Orca Scan rejected the API key (401 Invalid API key). Check the API Key in the
+            connector configuration: it should start with `orca_` and is created under Account
+            Settings in the Orca Scan web app.
+        - type: HttpResponseFilter
+          http_codes: [403]
+          action: FAIL
+          failure_type: config_error
+          error_message: >-
+            Orca Scan returned 403 Forbidden. API access requires an Orca Scan Business
+            subscription, and the key's user must have access to the requested sheet.
+        - type: HttpResponseFilter
+          http_codes: [404]
+          action: FAIL
+          failure_type: config_error
+          error_message: >-
+            Orca Scan returned 404 Not found. The sheet may have been deleted, or the key's
+            user no longer has access to it.
+        - type: HttpResponseFilter
+          http_codes: [429]
+          action: RATE_LIMITED
+          error_message: Orca Scan rate limit reached (15 requests/second). Waiting before retrying.
+        - type: HttpResponseFilter
+          http_codes: [500, 502, 503, 504]
+          action: RETRY
+
+  # Every endpoint wraps its results in {"data": [...]}. There is no pagination anywhere.
+  base_retriever:
+    type: SimpleRetriever
+    requester:
+      $ref: "#/definitions/base_requester"
+    record_selector:
+      type: RecordSelector
+      extractor:
+        type: DpathExtractor
+        field_path:
+          - data
+    paginator:
+      type: NoPagination
+
+  # Substreams: one partition per sheet, and each record gets a sheet_id.
+  sheet_partition_router:
+    type: SubstreamPartitionRouter
+    parent_stream_configs:
+      - type: ParentStreamConfig
+        stream:
+          $ref: "#/definitions/streams/sheets"
+        parent_key: _id
+        partition_field: sheet_id
+
+  add_sheet_id:
+    type: AddFields
+    fields:
+      - type: AddedFieldDefinition
+        path:
+          - sheet_id
+        value: "{{ stream_partition['sheet_id'] }}"
+
+  streams:
+    sheets:
+      type: DeclarativeStream
+      name: sheets
+      primary_key: _id
+      retriever:
+        $ref: "#/definitions/base_retriever"
+        requester:
+          $ref: "#/definitions/base_requester"
+          path: /sheets
+      schema_loader:
+        type: InlineSchemaLoader
+        schema:
+          $schema: http://json-schema.org/draft-07/schema#
+          type: object
+          additionalProperties: true
+          properties:
+            _id: { type: string, description: Sheet id (24-character hex). }
+            name: { type: [string, "null"], description: Sheet title as shown in Orca Scan. }
+            isOwner: { type: [boolean, "null"] }
+            canAdmin: { type: [boolean, "null"] }
+            canUpdate: { type: [boolean, "null"] }
+            canDelete: { type: [boolean, "null"] }
+            canExport: { type: [boolean, "null"] }
+
+    sheet_fields:
+      type: DeclarativeStream
+      name: sheet_fields
+      primary_key: [sheet_id, key]
+      retriever:
+        $ref: "#/definitions/base_retriever"
+        requester:
+          $ref: "#/definitions/base_requester"
+          path: "/sheets/{{ stream_partition['sheet_id'] }}/fields"
+        partition_router:
+          $ref: "#/definitions/sheet_partition_router"
+      transformations:
+        - $ref: "#/definitions/add_sheet_id"
+      schema_loader:
+        type: InlineSchemaLoader
+        schema:
+          $schema: http://json-schema.org/draft-07/schema#
+          type: object
+          additionalProperties: true
+          properties:
+            sheet_id: { type: string }
+            key: { type: string, description: Internal column key, used as the property name in row records. }
+            label: { type: [string, "null"] }
+            type: { type: [string, "null"], description: "string, integer, boolean, datetime, image, gps, ..." }
+            format: { type: [string, "null"], description: "text, barcode, number, date time (automatic), photo, gps location, ..." }
+            index: { type: [integer, string, "null"] }
+            required: { type: [boolean, "null"] }
+            locked: { type: [boolean, "null"] }
+            default: { type: [string, number, boolean, "null"] }
+            placeholder: { type: [string, "null"] }
+            prefix: { type: [string, "null"] }
+            suffix: { type: [string, "null"] }
+            length: { type: [integer, string, "null"] }
+            minLength: { type: [integer, string, "null"] }
+            maxLength: { type: [integer, string, "null"] }
+            minimum: { type: [number, string, "null"] }
+            maximum: { type: [number, string, "null"] }
+            formula: { type: [string, "null"] }
+            currencyType: { type: [string, "null"] }
+            listOptions: { type: [array, "null"], items: { type: [string, number, "null"] } }
+            multiSelect: { type: [boolean, "null"] }
+            autofocus: { type: [boolean, "null"] }
+            autoselect: { type: [boolean, "null"] }
+            emptyOnEdit: { type: [boolean, "null"] }
+            emptyOnScan: { type: [boolean, "null"] }
+            hiddenWeb: { type: [boolean, "null"] }
+            hiddenMobile: { type: [boolean, "null"] }
+            readonlyWeb: { type: [boolean, "null"] }
+            readonlyMobile: { type: [boolean, "null"] }
+            useInMobileSearch: { type: [boolean, "null"] }
+            useValueInList: { type: [boolean, "null"] }
+
+    sheet_users:
+      type: DeclarativeStream
+      name: sheet_users
+      primary_key: [sheet_id, _id]
+      retriever:
+        $ref: "#/definitions/base_retriever"
+        requester:
+          $ref: "#/definitions/base_requester"
+          path: "/sheets/{{ stream_partition['sheet_id'] }}/users"
+        partition_router:
+          $ref: "#/definitions/sheet_partition_router"
+      transformations:
+        - $ref: "#/definitions/add_sheet_id"
+      schema_loader:
+        type: InlineSchemaLoader
+        schema:
+          $schema: http://json-schema.org/draft-07/schema#
+          type: object
+          additionalProperties: true
+          properties:
+            sheet_id: { type: string }
+            _id: { type: [string, "null"] }
+            email: { type: [string, "null"] }
+            inviteId: { type: [string, "null"] }
+            canAdmin: { type: [boolean, "null"] }
+            canUpdate: { type: [boolean, "null"] }
+            canDelete: { type: [boolean, "null"] }
+            canExport: { type: [boolean, "null"] }
+
+    sheet_hooks:
+      type: DeclarativeStream
+      name: sheet_hooks
+      primary_key: [sheet_id, _id]
+      retriever:
+        $ref: "#/definitions/base_retriever"
+        requester:
+          $ref: "#/definitions/base_requester"
+          path: "/sheets/{{ stream_partition['sheet_id'] }}/hooks"
+        partition_router:
+          $ref: "#/definitions/sheet_partition_router"
+      transformations:
+        - $ref: "#/definitions/add_sheet_id"
+      schema_loader:
+        type: InlineSchemaLoader
+        schema:
+          $schema: http://json-schema.org/draft-07/schema#
+          type: object
+          additionalProperties: true
+          properties:
+            sheet_id: { type: string }
+            _id: { type: [string, "null"] }
+            targetUrl: { type: [string, "null"] }
+            eventName: { type: [string, "null"], description: "rows:add, rows:update, rows:delete, sheet:clear, ... or * for all." }
+            sheetId: { type: [string, "null"] }
+            enabled: { type: [boolean, "null"] }
+
+    sheet_triggers:
+      type: DeclarativeStream
+      name: sheet_triggers
+      primary_key: [sheet_id, _id]
+      retriever:
+        $ref: "#/definitions/base_retriever"
+        requester:
+          $ref: "#/definitions/base_requester"
+          path: "/sheets/{{ stream_partition['sheet_id'] }}/triggers"
+        partition_router:
+          $ref: "#/definitions/sheet_partition_router"
+      transformations:
+        - $ref: "#/definitions/add_sheet_id"
+      schema_loader:
+        type: InlineSchemaLoader
+        schema:
+          $schema: http://json-schema.org/draft-07/schema#
+          type: object
+          additionalProperties: true
+          properties:
+            sheet_id: { type: string }
+            _id: { type: [string, "null"] }
+            sheetId: { type: [string, "null"] }
+            name: { type: [string, "null"] }
+            enabled: { type: [boolean, "null"] }
+            conditionField: { type: [string, "null"] }
+            conditionType: { type: [string, "null"] }
+            conditionValue: { type: [string, "null"] }
+            actionType: { type: [string, "null"] }
+            actionField: { type: [string, "null"] }
+            actionValue: { type: [string, "null"] }
+            notifyMethod: { type: [string, "null"] }
+            notifyType: { type: [string, "null"] }
+            notifyEmails: { type: [string, "null"] }
+            soundType: { type: [string, "null"] }
+            toSheet: { type: [string, "null"] }
+
+    # Every change ever recorded on a sheet. The API has no date filter, so incremental sync
+    # downloads the full history each run and filters client-side on _changedOn (per sheet).
+    sheet_history:
+      type: DeclarativeStream
+      name: sheet_history
+      primary_key: [sheet_id, _id]
+      retriever:
+        $ref: "#/definitions/base_retriever"
+        requester:
+          $ref: "#/definitions/base_requester"
+          path: "/sheets/{{ stream_partition['sheet_id'] }}/history"
+        partition_router:
+          $ref: "#/definitions/sheet_partition_router"
+      incremental_sync:
+        type: DatetimeBasedCursor
+        cursor_field: _changedOn
+        datetime_format: "%Y-%m-%dT%H:%M:%S.%fZ"
+        cursor_datetime_formats:
+          - "%Y-%m-%dT%H:%M:%S.%fZ"
+          - "%Y-%m-%dT%H:%M:%SZ"
+          - "%Y-%m-%dT%H:%M:%S"
+        start_datetime:
+          type: MinMaxDatetime
+          datetime: "{{ config.get('start_date') or '2000-01-01T00:00:00' }}"
+          datetime_format: "%Y-%m-%dT%H:%M:%S"
+        is_client_side_incremental: true
+      transformations:
+        - $ref: "#/definitions/add_sheet_id"
+      schema_loader:
+        type: InlineSchemaLoader
+        schema:
+          $schema: http://json-schema.org/draft-07/schema#
+          type: object
+          additionalProperties: true
+          properties:
+            sheet_id: { type: string }
+            _id: { type: string, description: History entry id (not the row id). }
+            _change: { type: [string, "null"], description: add, update or delete. }
+            _changedOn: { type: string, format: date-time, description: When the change happened (UTC). The incremental cursor. }
+            _changedBy: { type: [string, "null"] }
+            _changedUsing: { type: [string, "null"] }
+
+streams:
+  - $ref: "#/definitions/streams/sheets"
+  - $ref: "#/definitions/streams/sheet_fields"
+  - $ref: "#/definitions/streams/sheet_users"
+  - $ref: "#/definitions/streams/sheet_hooks"
+  - $ref: "#/definitions/streams/sheet_triggers"
+  - $ref: "#/definitions/streams/sheet_history"
+
+# One typed rows stream per sheet: the resolver lists /sheets, and for each sheet stamps the
+# stream name, the rows path, the sheet_id and the /fields path (for the schema) into the
+# template below via $parameters.
+dynamic_streams:
+  - type: DynamicDeclarativeStream
+    name: rows
+    stream_template:
+      type: DeclarativeStream
+      name: rows_placeholder
+      primary_key: _id
+      $parameters:
+        sheet_id: placeholder
+      retriever:
+        $ref: "#/definitions/base_retriever"
+        requester:
+          $ref: "#/definitions/base_requester"
+          path: "/sheets/{{ parameters['sheet_id'] }}/rows"
+      transformations:
+        - type: AddFields
+          fields:
+            - type: AddedFieldDefinition
+              path:
+                - sheet_id
+              value: "{{ parameters['sheet_id'] }}"
+      schema_loader:
+        type: DynamicSchemaLoader
+        # The loader reads ONE record and applies schema_pointer to it, so this retriever must
+        # return the whole {"data": [...]} response as that record.
+        retriever:
+          $ref: "#/definitions/base_retriever"
+          requester:
+            $ref: "#/definitions/base_requester"
+            path: "/sheets/{{ parameters['sheet_id'] }}/fields"
+          record_selector:
+            type: RecordSelector
+            extractor:
+              type: DpathExtractor
+              field_path: []
+        # /fields only describes the user columns; every row also has _id and sheet_id.
+        schema_transformations:
+          - type: AddFields
+            fields:
+              - type: AddedFieldDefinition
+                path: [_id]
+                value: "{{ {'type': ['null', 'string'], 'description': 'Row id, unique within the sheet.'} }}"
+              - type: AddedFieldDefinition
+                path: [sheet_id]
+                value: "{{ {'type': ['null', 'string'], 'description': 'Id of the sheet this row belongs to (added by the connector).'} }}"
+        schema_type_identifier:
+          type: SchemaTypeIdentifier
+          schema_pointer:
+            - data
+          key_pointer:
+            - key
+          type_pointer:
+            - type
+          types_mapping:
+            - current_type: datetime
+              target_type: string
+            - current_type: image
+              target_type: array
+            - current_type: gps
+              target_type: string
+            - current_type: currency
+              target_type: number
+    components_resolver:
+      type: HttpComponentsResolver
+      retriever:
+        $ref: "#/definitions/base_retriever"
+        requester:
+          $ref: "#/definitions/base_requester"
+          path: /sheets
+      components_mapping:
+        - type: ComponentMappingDefinition
+          field_path:
+            - name
+          value: "rows_{{ components_values['name'] | lower | regex_replace('[^a-z0-9]+', '_') }}"
+        - type: ComponentMappingDefinition
+          field_path:
+            - $parameters
+            - sheet_id
+          value: "{{ components_values['_id'] }}"
+
+spec:
+  type: Spec
+  documentation_url: https://github.com/joermwatts/airbyte-source-orca-scan#readme
+  connection_specification:
+    $schema: http://json-schema.org/draft-07/schema#
+    title: Orca Scan Source Spec
+    type: object
+    required:
+      - api_key
+    additionalProperties: true
+    properties:
+      api_key:
+        type: string
+        title: API Key
+        description: >-
+          Your Orca Scan API key, which starts with `orca_`. Create one in the Orca Scan web app
+          under Account Settings. API access requires an Orca Scan Business subscription.
+        airbyte_secret: true
+        order: 0
+      start_date:
+        type: string
+        title: Start Date
+        description: >-
+          Optional. On the first incremental sync of sheet_history, only changes at or after this
+          instant (UTC) are replicated. Leave blank to sync the full history. Rows are always
+          synced in full - they carry no timestamp. Format: 2024-01-01T00:00:00.
+        pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}$"
+        pattern_descriptor: "YYYY-MM-DDTHH:mm:ss"
+        examples:
+          - "2024-01-01T00:00:00"
+        format: date-time
+        order: 1
+
+metadata:
+  autoImportSchema:
+    sheets: false
+    sheet_fields: false
+    sheet_users: false
+    sheet_hooks: false
+    sheet_triggers: false
+    sheet_history: false

@@ -2,6 +2,10 @@
 
 All notable changes to the Orca Scan source connector. Dates are ISO (YYYY-MM-DD).
 
+## Unreleased
+
+- Added `connector-builder/manifest.yaml`: a declarative (low-code) version of the connector for Airbyte's Connector Builder, with the same streams, auth, rate limiting, per-sheet typed row streams and incremental `sheet_history`. Runnable locally via `scripts/manifest_config.py` + `source-declarative-manifest`.
+
 ## 0.1.0 - 2026-09-13
 
 Initial release.
